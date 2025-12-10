@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yaksha Nada: Harmonium Shruti Box & Tuner</title>
+    <style>
+        /* --- GLOBAL STYLES --- */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px; 
+            /* START: Logo Background Changes (RESTORED TO ORIGINAL INTENT) */
+            /* NOTE TO USER: Replace 'youtube_logo_placeholder.png' with your actual logo file. */
+            background-image: url('youtube_logo_placeholder.png'); 
+            background-repeat: no-repeat;
+            background-position: center 80px; /* Center horizontally, 80px down from the top */
+            background-size: 70%; /* Adjust size as needed, e.g., 50% to 80% */
+            background-color: rgba(255, 255, 255, 0.95); /* Semi-transparent white overlay for contrast */
+            /* END: Logo Background Changes */
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            /* Centering on wide screens */
+            margin: 20px auto; 
+            padding: 20px 20px 0 20px; 
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER STYLES (Yaksha Nada) --- */
+        .header-box {
+            background-color: #8b0000;
+            color: white;
+            padding: 15px;
+            /* Negative margins to pull to container edges, covering the top radius */
+            margin: -20px -20px 20px -20px; 
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between; 
+            gap: 15px;
+        }
+        
+        .header-box h1 {
+            color: white;
+            margin: 0;
+            font-size: 1.8em;
+            font-weight: 900;
+            flex-grow: 1;
+        }
+
+        .app-icon, .my-icon {
+            /* Placeholder for the user's icon image */
+            width: 55px; 
+            height: 55px; 
+            border-radius: 50%;
+            background-color: #f0f0f0; 
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+            cursor: pointer; 
+        }
+
+        .app-icon {
+            background-image: url('Yaksha Nada Logo.jpeg'); 
+        }
+
+        .my-icon {
+            background-image: url('Skanda Logo.jpeg'); 
+        }
+        
+        /* Main Logo was here, removed as per user clarification */
+
+        /* --- SWARA MATCHING DISPLAY (MODIFIED) --- */
+        #swara-match-box {
+            background-color: #f0f8ff;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            padding: 10px; 
+            margin-bottom: 25px;
+        }
+
+        #closest-swara {
+            font-size: 2.8em; 
+            font-weight: 900;
+            color: #007bff;
+            margin: 2px 0; 
+            line-height: 1.1;
+            transition: color 0.3s;
+            /* FIX: Ensure consistent height regardless of text content */
+            min-height: 1.1em;
+            display: block; 
+        }
+
+        #target-freq-display {
+            font-size: 0.9em; 
+            color: #555;
+            margin-top: 2px;
+        }
+
+        /* --- PITCH & CENTS DISPLAY --- */
+        #pitch-cents-row {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .data-point {
+            padding: 10px;
+            background-color: #eee;
+            border-radius: 8px;
+            min-width: 45%;
+            flex-grow: 1;
+        }
+
+        .data-point span {
+            display: block;
+            font-size: 0.75em;
+            color: #555;
+        }
+        
+        #detected-freq-value, #cents-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            transition: color 0.3s;
+            /* FIX: Ensure consistent width for numerical content */
+            display: inline-block; 
+            min-width: 90px;
+        }
+
+        /* --- TUNER GAUGE (NEEDLE) --- */
+        #tuner-gauge {
+            height: 30px;
+            background-color: #eee;
+            border-radius: 15px;
+            position: relative;
+            margin-bottom: 10px;
+            overflow: hidden;
+            border: 1px solid #ccc;
+        }
+
+        #needle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            background-color: #8b0000;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: left 0.1s ease-out, background-color 0.3s;
+            z-index: 2;
+            border-radius: 4px;
+        }
+
+        .center-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: darkgreen;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+
+        .range-indicator {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 15%; 
+            left: 42.5%;
+            background-color: rgba(0, 128, 0, 0.3);
+            z-index: 0;
+        }
+
+        /* --- CONTROLS --- */
+        button {
+            padding: 12px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+        
+        /* New Play/Stop Button Style */
+        .play-stop-btn {
+            background-color: #4CAF50; /* Green (Default/Stopped) */
+            color: white;
+            flex-grow: 1;
+        }
+
+        .play-stop-btn.playing {
+            background-color: #dc3545; /* Red when playing */
+        }
+
+        .sa-select {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+            flex-grow: 1;
+            min-width: 150px;
+            text-align: center; 
+        }
+        
+        /* --- RADEL-INSPIRED STYLES (Updated) --- */
+        .radel-inspired-controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 10px;
+            background-color: #f7f7f7;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+        }
+
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 5px; 
+            min-width: 30%;
+        }
+
+        .control-panel:nth-child(2) {
+            /* The mode panel (center) - added solid lines for separation */
+            border-left: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+        }
+        
+        .control-panel label {
+            font-size: 0.8em;
+            font-weight: bold;
+            color: #8b0000;
+            margin-bottom: 5px;
+        }
+        
+        /* --- PITCH PANEL SPECIFIC STYLES --- */
+        .pitch-panel .sa-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .pitch-panel .sa-select {
+            margin-top: 5px;
+            height: 40px;
+            min-width: 90%; 
+            margin-bottom: 8px;
+        }
+        
+        .pitch-btn {
+            background-color: #e0e0e0;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 50%; 
+            width: 35px;
+            height: 35px;
+            padding: 0;
+            font-size: 1.5em;
+            line-height: 1;
+            margin: 2px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .pitch-btn-up::after {
+            content: '▲';
+            display: block;
+            margin-top: -3px;
+        }
+        
+        .pitch-btn-down::after {
+            content: '▼';
+            display: block;
+            margin-top: 3px;
+        }
+
+        /* Mode Panel Specifics */
+        .mode-panel {
+            flex-grow: 1;
+        }
+
+        .mode-buttons-group {
+            background-color: #e0e0e0;
+            padding: 8px 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            width: 100%;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .mode-label {
+            font-size: 0.7em;
+            font-weight: 900;
+            color: #8b0000;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        
+        /* Drone Mode Button Styling (Modified for list layout) */
+        .drone-mode-btn {
+            display: block;
+            width: 100%;
+            margin-bottom: 3px;
+            padding: 6px 10px;
+            font-size: 0.85em;
+            font-weight: 500;
+            text-align: left;
+            background-color: #fcfcfc;
+            border: 1px solid #ccc;
+            color: #333;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .drone-mode-btn.active {
+            background-color: #8b0000;
+            color: white;
+            border-color: #8b0000;
+            box-shadow: 0 0 5px rgba(139, 0, 0, 0.7);
+        }
+        
+        /* --- VOLUME PANEL SPECIFIC STYLES --- */
+        .vol-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 150px; /* Give it space for vertical slider */
+        }
+        
+        /* Vertical Slider Styling */
+        .volume-slider {
+            -webkit-appearance: slider-vertical; /* Webkit specific for vertical */
+            writing-mode: bt-lr; /* Standard property for vertical text flow */
+            width: 10px; /* Thickness of the track */
+            height: 120px; /* Length of the track */
+            margin: 20px 0; /* Vertical centering */
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.9;
+            transition: opacity .2s;
+            border-radius: 5px;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #8b0000;
+            cursor: pointer;
+            border: 2px solid white;
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #8b0000;
+            cursor: pointer;
+            border: 2px solid white;
+        }
+
+        .volume-label {
+            font-size: 0.8em;
+            font-weight: bold;
+            color: #8b0000;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        
+        .status {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            color: #8b0000;
+            font-weight: bold;
+        }
+
+        .gauge-labels {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 5px;
+            margin-bottom: 20px; /* Separates gauge from footer */
+            font-size: 0.8em;
+        }
+
+        /* --- FOOTER STYLES (now inside container) --- */
+        .footer-bar {
+            background-color: #8b0000;
+            color: white;
+            /* Adjusted margin-bottom to 0 for flush fit */
+            margin: 0 -20px 0 -20px; 
+            padding: 10px 0;
+            text-align: center;
+            font-size: 0.8em;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column; /* Changed to column to stack the two text lines */
+            align-items: center;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            width: auto;
+        }
+        
+        .footer-bar a {
+            color: #f0f8ff;
+            text-decoration: none;
+            font-weight: bold;
+            white-space: nowrap; 
+        }
+        
+        /* .footer-icon CSS block removed */
+        
+        /* --- MODAL STYLES --- */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 100; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.4); 
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; 
+            max-width: 400px;
+            border-radius: 10px;
+            position: relative;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* UPDATED STYLE FOR ICON IN MODAL - INCREASED SIZE */
+        .modal-icon {
+            width: 80px; /* Increased from 60px */
+            height: 80px; /* Increased from 60px */
+            border-radius: 50%;
+            margin: 15px auto 15px auto; /* Add margin above and below */
+            background-size: cover;
+            background-position: center;
+            border: 3px solid #8b0000;
+            display: block; 
+        }
+        
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 5px;
+            right: 15px;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: #8b0000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-content h3 {
+             /* New style for the modal header */
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #8b0000;
+            font-size: 1.5em;
+        }
+
+        .modal-content p {
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .modal-content a.modal-link {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .modal-content a.modal-link:hover {
+            background-color: #0056b3;
+        }
+
+        /* --- RESPONSIVENESS (Mobile Adjustments) --- */
+        @media (max-width: 480px) {
+            .container {
+                width: 100%; /* Ensure full width on mobile */
+                margin: 0; /* FIX: Remove margins to touch screen edges */
+                border-radius: 0; /* FIX: Remove radius for seamless look */
+                padding: 15px 15px 0 15px;
+            }
+            .header-box {
+                margin: -15px -15px 15px -15px;
+                padding: 10px;
+                gap: 5px;
+                /* FIX: Remove radius to meet screen corner */
+                border-top-left-radius: 0;
+                border-top-right-radius: 0;
+            }
+            /* ADJUSTED MOBILE ICON SIZE */
+            .app-icon, .my-icon {
+                width: 45px;
+                height: 45px;
+            }
+            
+            /* MODAL ICON SIZE ON MOBILE */
+            .modal-icon {
+                width: 60px;
+                height: 60px;
+            }
+
+            /* RADEL-INSPIRED MOBILE ADJUSTMENTS */
+            .radel-inspired-controls {
+                flex-direction: column;
+                gap: 5px;
+            }
+            .control-panel {
+                width: 100%;
+                border: none;
+                padding: 10px;
+            }
+            .control-panel:nth-child(2) {
+                border-left: none;
+                border-right: none;
+                border-top: 1px solid #ddd;
+                border-bottom: 1px solid #ddd;
+            }
+            .pitch-panel .sa-select, .play-stop-btn {
+                width: 100%;
+            }
+            .pitch-panel .sa-controls {
+                flex-direction: row; 
+                justify-content: space-around;
+            }
+            .volume-slider {
+                /* Ensure vertical slider still looks right on mobile */
+                height: 100px; 
+                margin: 5px auto;
+            }
+            .vol-panel {
+                min-height: 120px;
+            }
+            .footer-bar {
+                margin: 0 -15px 0 -15px;
+                /* FIX: Remove radius to meet screen corner */
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-box">
+            <div class="app-icon" id="appIcon" title="Yaksha Nada(Click)"></div> 
+            <h1>ಯಕ್ಷ ನಾದ</h1>
+            <div class="my-icon" id="myIcon" title="Contact Creator(Click)"></div> 
+        </div>
+        
+        <p class="status" id="status-message">Default: Sā (D) and Pā Drone. Press 'Start / Stop' to begin.</p>
+        
+        <div class="radel-inspired-controls">
+            
+            <div class="control-panel pitch-panel">
+                <label for="saSelect">PITCH / Sā</label>
+                <div class="sa-controls">
+                    <button class="pitch-btn pitch-btn-up" id="pitch-up" title="Pitch Up"></button>
+                    <select id="saSelect" class="sa-select">
+                        <option value="261.63">Sā (C)</option>
+                        <option value="277.18">Sā (C#)</option>
+                        <option value="293.66" selected>Sā (D)</option>
+                        <option value="311.13">Sā (Eb/D#)</option>
+                        <option value="329.63">Sā (E)</option>
+                        <option value="349.23">Sā (F)</option>
+                        <option value="369.99">Sā (F#)</option>
+                        <option value="392.00">Sā (G)</option>
+                        <option value="415.30">Sā (G#)</option>
+                        <option value="440.00">Sā (A)</option>
+                        <option value="466.16">Sā (Bb)</option>
+                        <option value="493.88">Sā (B)</option>
+                    </select>
+                    <button class="pitch-btn pitch-btn-down" id="pitch-down" title="Pitch Down"></button>
+                </div>
+            </div>
+
+            <div class="control-panel mode-panel">
+                <div class="mode-buttons-group">
+                    <div class="mode-label">MEMORY / MODE</div>
+                    <button class="drone-mode-btn" id="mode-ma" data-mode="Ma">Sā-Mā-Sā (4th)</button>
+                    <button class="drone-mode-btn active" id="mode-pa" data-mode="Pa">Sā-Pā-Sā (5th)</button>
+                    <button class="drone-mode-btn" id="mode-lower-sa" data-mode="Sa">Sā & Sā' (Low Sā)</button>
+                </div>
+                
+                <button class="play-stop-btn" id="startButton">
+                    <span class="start-text">START / STOP</span>
+                </button>
+            </div>
+
+            <div class="control-panel vol-panel">
+                <div class="volume-label">VOLUME</div>
+                <input type="range" min="0" max="1" step="0.01" value="0.7" class="volume-slider" id="volume-slider">
+            </div>
+        </div>
+        <hr style="width: 80%; margin: 15px auto;">
+
+        <div id="swara-match-box">
+            <p style="margin: 0; font-weight: 500;">Shruti Match Percentage:</p>
+            <div id="closest-swara">-- %</div>
+            <div id="target-freq-display">Closest Swara: Sā at 293.66 Hz</div>
+        </div>
+
+        <div id="pitch-cents-row">
+            <div class="data-point">
+                <span id="detected-freq-value">-- Hz</span>
+                <span>Detected Frequency</span>
+            </div>
+            <div class="data-point">
+                <span id="cents-value">-- CENTS</span>
+                <span>Cents from Target Swara</span>
+            </div>
+        </div>
+        
+        <div id="tuner-gauge">
+            <div class="range-indicator"></div>
+            <div class="center-line"></div>
+            <div id="needle"></div>
+        </div>
+        <div class="gauge-labels">
+            <span style="color: #8b0000;">🔴 Flat &lt;---</span>
+            <span style="color: darkgreen;">|</span>
+            <span style="color: #8b0000;">---&gt; 🟢 Sharp</span>
+        </div>
+        
+        <div class="footer-bar">
+            <span>All rights belong to Yaksha Nada YouTube Channel &copy; 2026</span>
+            
+            <span>Created By Skanda.R.Hebbar</span>
+        </div>
+    </div>
+    
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3 id="modal-title"></h3> <div class="modal-icon" id="modalIcon"></div> <p id="modal-text"></p> <a href="#" id="modal-link" class="modal-link" target="_blank"></a> </div>
+    </div>
+    <script>
+        // --- JAVASCRIPT LOGIC ---
+
+        let audioContext;
+        let analyser;
+        let mediaStreamSource;
+        let rafID;
+        let isTuning = false;
+        let droneOscillators = []; 
+        let currentDroneMode = 'Pa'; // Default mode: Pa (Sā-Pā-Sā')
+        let masterDroneGain; // Master Gain Node for Volume Control
+
+        // --- CORE SHRUTI SCALE DEFINITION (JUST INTTONATION SHUDDHA SCALE) ---
+        // Used for matching detected pitch to the Sā scale
+        const SWARA_RATIOS = {
+            'Sā': 1.0,
+            'Rē': 9/8,    
+            'Gā': 5/4,    
+            'Mā': 4/3,    // Perfect Fourth (Shuddha Madhyama)
+            'Pā': 3/2,              // Perfect Fifth
+            'Dhā': 5/3,   
+            'Nī': 15/8,   
+            "Sā'": 2.0
+        };
+
+        const BUF_SIZE = 1024;
+        const CENTS_RANGE = 50; 
+
+        // DOM Elements
+        const startButton = document.getElementById('startButton');
+        const detectedFreqValue = document.getElementById('detected-freq-value');
+        const centsValue = document.getElementById('cents-value');
+        const closestSwara = document.getElementById('closest-swara');
+        const targetFreqDisplay = document.getElementById('target-freq-display');
+        const needle = document.getElementById('needle');
+        const saSelect = document.getElementById('saSelect');
+        const statusMessage = document.getElementById('status-message');
+        const droneModeButtons = document.querySelectorAll('.drone-mode-btn');
+
+        // NEW CONTROLS
+        const pitchUpButton = document.getElementById('pitch-up');
+        const pitchDownButton = document.getElementById('pitch-down');
+        const volumeSlider = document.getElementById('volume-slider');
+
+        // MODAL ELEMENTS
+        const appIcon = document.getElementById('appIcon');
+        const myIcon = document.getElementById('myIcon');
+        const modal = document.getElementById('myModal');
+        const closeBtn = document.querySelector('.close-btn');
+        const modalTitle = document.getElementById('modal-title');
+        const modalText = document.getElementById('modal-text');
+        const modalLink = document.getElementById('modal-link');
+        const modalIcon = document.getElementById('modalIcon');
+
+
+        // --- MODAL FUNCTIONS ---
+        function openModal(title, text, linkUrl, linkText, iconUrl = '') {
+            modalTitle.textContent = title;
+            modalText.innerHTML = text;
+            modalLink.href = linkUrl;
+            modalLink.textContent = linkText;
+            
+            // Set the background image for the modal icon
+            if (iconUrl) {
+                modalIcon.style.backgroundImage = `url('${iconUrl}')`;
+                modalIcon.style.display = 'block';
+            } else {
+                modalIcon.style.display = 'none';
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        appIcon.addEventListener('click', () => {
+            openModal(
+                'Yaksha Nada YouTube Channel',
+                'Visit the official Yaksha Nada YouTube channel for Yakshagana videos and more!!!',
+                'http://youtube.com/channel/UCyhdU9Cb11Ri5-kbqAUyuPQ',
+                'Go to Channel',
+                'Yaksha Nada Logo.jpeg' // Pass the App Icon URL
+            );
+        });
+
+        myIcon.addEventListener('click', () => {
+            openModal(
+                'Contact Creator',
+                'Connect with the creator, Skanda.R.Hebbar, on Instagram!',
+                'https://www.instagram.com/_skanda_135/',
+                'Visit Instagram Profile',
+                'Skanda Logo.jpeg' // Pass the Creator Icon URL
+            );
+        });
+
+        closeBtn.addEventListener('click', closeModal);
+        window.addEventListener('click', (event) => {
+            if (event.target == modal) {
+                closeModal();
+            }
+        });
+        // -----------------------------
+
+        // --- 1. PITCH DETECTION (Simplified Autocorrelation) ---
+        function autoCorrelate(buffer, sampleRate) {
+            let maxVal = 0;
+            for (let i = 0; i < buffer.length; i++) {
+                maxVal = Math.max(maxVal, Math.abs(buffer[i]));
+            }
+            if (maxVal < 0.01) { return -1; }
+
+            const MIN_FREQ = 70;
+            const MAX_FREQ = 1200;
+            const MIN_PERIOD = sampleRate / MAX_FREQ;
+            const MAX_PERIOD = sampleRate / MIN_FREQ;
+
+            let best_offset = -1;
+            let best_correlation = -1;
+
+            for (let offset = MIN_PERIOD; offset <= MAX_PERIOD; offset++) {
+                let correlation = 0;
+                for (let i = 0; i < buffer.length - offset; i++) {
+                    correlation += buffer[i] * buffer[i + offset];
+                }
+                if (correlation > best_correlation) {
+                    best_correlation = correlation;
+                    best_offset = offset;
+                }
+            }
+
+            if (best_offset === -1 || best_correlation < 0.1) { return -1; }
+            return sampleRate / best_offset;
+        }
+
+        // --- 2. SWARA MATCHING LOGIC (INDIAN SCALE) ---
+        function findClosestSwara(detectedFreq, tonicFreq) {
+            let closestSwaraName = 'Sā';
+            let minCentsDifference = Infinity;
+            let closestTargetFreq = tonicFreq;
+
+            const swaraFrequencies = Object.entries(SWARA_RATIOS).map(([name, ratio]) => ({
+                name: name,
+                freq: tonicFreq * ratio
+            }));
+            
+            // Search two octaves down, base octave, and two octaves up.
+            // This covers a wide range for most instruments (e.g., C2 to C6)
+            for (let octave = -2; octave <= 2; octave++) {
+                const octaveRatio = Math.pow(2, octave);
+
+                for (const swara of swaraFrequencies) {
+                    const targetFreq = swara.freq * octaveRatio;
+                    
+                    if (targetFreq > 0) {
+                        // Formula: Cents = 1200 * log2(f_detected / f_target)
+                        const cents = 1200 * Math.log2(detectedFreq / targetFreq);
+                        
+                        if (Math.abs(cents) < Math.abs(minCentsDifference)) {
+                            minCentsDifference = cents;
+                            
+                            let displayName = swara.name;
+                            
+                            // Adjust display for Sā' (Octave above) and Sā. (Octave below)
+                            if (swara.name.includes("Sā")) {
+                                if (octave === 1) displayName = "Sā'"; 
+                                else if (octave === -1) displayName = "Sā."; 
+                                else if (octave === 2) displayName = "Sā''"; 
+                                else if (octave === -2) displayName = "Sā.."; 
+                            }
+                            
+                            closestSwaraName = displayName;
+                            closestTargetFreq = targetFreq;
+                        }
+                    }
+                }
+            }
+
+            return { name: closestSwaraName, targetFreq: closestTargetFreq, cents: minCentsDifference };
+        }
+
+        // Helper for creating White Noise (used for Airflow modeling)
+        function createNoiseNode(ac) {
+            const bufferSize = ac.sampleRate;
+            const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
+            const output = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1; // White Noise
+            }
+            const noise = ac.createBufferSource();
+            noise.buffer = buffer;
+            noise.loop = true;
+            return noise;
+        }
+
+
+        // --- 3. HARMONIUM DRONE GENERATOR (Just Intonation & Realism Enhanced) ---
+        function startDrone(tonicFreq) {
+            const ac = audioContext || (audioContext = new (window.AudioContext || window.webkitAudioContext)());
+            const now = ac.currentTime;
+            
+            stopDrone();
+
+            // Initialize Master Gain Node if it doesn't exist
+            if (!masterDroneGain) {
+                masterDroneGain = ac.createGain();
+                masterDroneGain.connect(ac.destination);
+                // Set initial gain from slider value
+                masterDroneGain.gain.setValueAtTime(parseFloat(volumeSlider.value), now); 
+            }
+
+            let droneNotes = [];
+            
+            // Base drone notes: Tonic (Sā) and Octave (Sā')
+            const baseDrone = [
+                { freqRatio: 1.0, baseVolume: 0.7, name: 'Sa' },
+                { freqRatio: 2.0, baseVolume: 0.35, name: "Sa'" }
+            ];
+
+            if (currentDroneMode === 'Pa') {
+                // Add Panchama (Pā) - Perfect Fifth (Just Intonation ratio: 3/2 or 1.5)
+                droneNotes = [
+                    ...baseDrone,
+                    { freqRatio: 1.5, baseVolume: 0.45, name: 'Pa' } 
+                ];
+            } else if (currentDroneMode === 'Ma') {
+                // Add Madhyama (Mā) - Perfect Fourth (Just Intonation ratio: 4/3)
+                droneNotes = [
+                    ...baseDrone,
+                    { freqRatio: 4/3, baseVolume: 0.45, name: 'Ma' } 
+                ];
+            } else if (currentDroneMode === 'Sa') {
+                // Sā-Sā drone: Sā, Lower Sā (Octave below), Sā' (Octave above)
+                droneNotes = [
+                    ...baseDrone,
+                    { freqRatio: 0.5, baseVolume: 0.45, name: 'LowerSa' }
+                ];
+            }
+            
+            droneNotes.sort((a, b) => b.baseVolume - a.baseVolume);
+
+
+            // ENHANCED HARMONIC DEFINITION for a richer Harmonium sound
+            // NOTE: The 0.0 at index 0 is required for PeriodicWave
+            const HARMONIC_DEFINITION = [
+                0.0, 1.0, 0.7, 0.5, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08, 0.05, 0.03, 0.01 
+            ]; 
+            
+            const real = new Float32Array(HARMONIC_DEFINITION);
+            const imag = new Float32Array(real.length).fill(0); 
+            const customWave = ac.createPeriodicWave(real, imag);
+
+            // BiquadFilter (Lowpass) for general warmth and removing harsh high frequencies
+            const filter = ac.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(3000, now); // Slightly lower LPF for a warmer sound
+            filter.Q.setValueAtTime(1.0, now); 
+            filter.connect(masterDroneGain); 
+
+            // --- HARMONIUM NOISE MODELING (Airflow and Key Noise) ---
+            const noise = createNoiseNode(ac);
+            const noiseGain = ac.createGain();
+            noise.connect(noiseGain).connect(filter);
+            
+            // Subtle, constant volume for air hiss
+            const noiseVolume = 0.005; // Very low volume for realism
+            noiseGain.gain.setValueAtTime(0.0001, now); 
+            
+            // Quick Attack on drone start to simulate initial air blast
+            const noiseAttackTime = 0.1;
+            noiseGain.gain.linearRampToValueAtTime(noiseVolume, now + noiseAttackTime);
+
+            noise.start(now);
+            droneOscillators.push({ osc: noise, gain: noiseGain }); // Add to list for proper stop
+
+
+            // Map and create the main tone oscillators
+            droneNotes.map(note => {
+                const osc = ac.createOscillator();
+                osc.setPeriodicWave(customWave); 
+
+                const baseFreq = tonicFreq * note.freqRatio;
+                osc.frequency.setValueAtTime(baseFreq, now); 
+
+                
+                // ----------------- HARMONIUM BELLOWS LFO -----------------
+                // Creates subtle fluctuations in pitch and volume
+                const lfo = ac.createOscillator();
+                lfo.type = 'sine'; 
+                
+                // LFO Rate: 1.5 Hz (Simulates a steady pump)
+                lfo.frequency.setValueAtTime(1.5, now); 
+                lfo.start(now);
+                
+                // 1. Pitch Fluctuation (Vibrato)
+                const pitchLfoGain = ac.createGain();
+                // Depth: +/- 0.5 cents (0.00003 * baseFreq) - extremely subtle
+                pitchLfoGain.gain.setValueAtTime(baseFreq * 0.00003, now); 
+                lfo.connect(pitchLfoGain).connect(osc.frequency);
+                
+                // 2. Volume Fluctuation (Tremolo)
+                const lfoGain = ac.createGain();
+                // Depth: 10% volume fluctuation
+                lfoGain.gain.setValueAtTime(note.baseVolume * 0.1, now); 
+                lfo.connect(lfoGain);
+
+                const gain = ac.createGain();
+                const volume = note.baseVolume;
+                
+                gain.gain.setValueAtTime(0.001, now); 
+                const attackTime = 0.3; 
+                // Set base gain slightly lower to allow the LFO to modulate up and down
+                gain.gain.linearRampToValueAtTime(volume * 0.9, now + attackTime); 
+                
+                lfoGain.connect(gain.gain); // LFO modulates the main gain
+                // ---------------------------------------------------------
+
+                // --- STEREO DETUNING (Chorus) ---
+                const panner = ac.createStereoPanner();
+                
+                // Pan notes slightly left (-0.2) or right (+0.2)
+                const panValue = note.freqRatio === 1.5 ? 0.2 : (note.freqRatio === 4/3 ? -0.2 : 0);
+                panner.pan.setValueAtTime(panValue, now);
+                
+                // Subtly detune the pitch for reed imperfection
+                const detuneValue = panValue * 2; // +/- 4 cents detune
+                osc.detune.setValueAtTime(detuneValue, now);
+                
+                // New connection chain
+                osc.connect(gain).connect(panner).connect(filter);
+                
+                osc.start();
+                
+                // Add all nodes to cleanup list
+                droneOscillators.push({ osc: osc, gain: gain, lfo: lfo, pitchLfoGain: pitchLfoGain }); 
+                return { osc: osc, gain: gain, lfo: lfo, pitchLfoGain: pitchLfoGain }; 
+            });
+        }
+
+        function stopDrone() {
+            const now = audioContext ? audioContext.currentTime : 0;
+            const releaseTime = 0.5; 
+
+            droneOscillators.forEach(node => {
+                try {
+                    node.gain.gain.cancelScheduledValues(now);
+                    node.gain.gain.exponentialRampToValueAtTime(0.001, now + releaseTime);
+                    
+                    if (node.lfo) { // Stop LFO if it exists (for tone oscillators)
+                        node.lfo.stop(now + releaseTime + 0.1); 
+                        node.lfo.disconnect();
+                        node.pitchLfoGain.disconnect();
+                    }
+                    
+                    // Stop the main oscillator/noise source
+                    node.osc.stop(now + releaseTime + 0.1); 
+                    
+                    setTimeout(() => {
+                        try {
+                            node.osc.disconnect();
+                            node.gain.disconnect();
+                        } catch (e) {}
+                    }, (releaseTime + 0.1) * 1000 + 50); 
+                } catch (e) {
+                    // Ignore errors if oscillator is already stopped
+                }
+            });
+            droneOscillators = [];
+        }
+
+
+        function updateDroneFrequency(newTonicFreq) {
+            if (isTuning) {
+                startDrone(newTonicFreq);
+            }
+        }
+
+        // --- PITCH STEPPER FUNCTION ---
+        function changePitch(direction) {
+            const options = Array.from(saSelect.options);
+            let currentIndex = saSelect.selectedIndex;
+            
+            let newIndex = currentIndex;
+            if (direction === 'up' && currentIndex < options.length - 1) {
+                newIndex++;
+            } else if (direction === 'down' && currentIndex > 0) {
+                newIndex--;
+            }
+            
+            if (newIndex !== currentIndex) {
+                saSelect.selectedIndex = newIndex;
+                const newTonicFreq = parseFloat(options[newIndex].value);
+                updateDroneFrequency(newTonicFreq); 
+
+                closestSwara.textContent = '-- %';
+                closestSwara.style.color = '#007bff';
+                targetFreqDisplay.textContent = `Closest Swara: Sā at ${newTonicFreq.toFixed(2)} Hz`;
+            }
+        }
+        
+        // --- VOLUME SLIDER FUNCTION ---
+        function setVolume(volume) {
+            if (masterDroneGain) {
+                masterDroneGain.gain.setTargetAtTime(volume, audioContext.currentTime, 0.05);
+            }
+        }
+
+        function handleDroneModeChange(mode) {
+            currentDroneMode = mode;
+            
+            droneModeButtons.forEach(btn => {
+                if (btn.dataset.mode === mode) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            if (isTuning) {
+                updateDroneFrequency(parseFloat(saSelect.value));
+                statusMessage.textContent = `🎤 Drone: ${getModeText(mode)}. Play your instrument to tune.`;
+            } else {
+                statusMessage.textContent = `Selected Drone: ${getModeText(mode)}. Click 'START / STOP'.`;
+            }
+        }
+
+        function getModeText(mode) {
+            if (mode === 'Pa') return 'Sā-Pā-Sā\' (Tonic, Fifth, Octave)';
+            if (mode === 'Ma') return 'Sā-Mā-Sā\' (Tonic, Fourth, Octave)';
+            if (mode === 'Sa') return 'Sā-Sā\' (Lower Sā, Tonic, Octave)';
+            return '';
+        }
+
+        // --- 4. MAIN CONTROL FLOW AND EVENT LISTENERS ---
+
+        startButton.addEventListener('click', () => {
+            if (!isTuning) {
+                startTuningAndDrone();
+            } else {
+                stopTuningAndDrone();
+            }
+        });
+
+        saSelect.addEventListener('change', (e) => {
+            const newTonicFreq = parseFloat(e.target.value);
+            updateDroneFrequency(newTonicFreq); 
+
+            closestSwara.textContent = '-- %';
+            closestSwara.style.color = '#007bff';
+            targetFreqDisplay.textContent = `Closest Swara: Sā at ${newTonicFreq.toFixed(2)} Hz`;
+            centsValue.textContent = '-- CENTS';
+            centsValue.style.color = '#555';
+            needle.style.left = '50%';
+            needle.style.backgroundColor = '#8b0000';
+            
+            if (!isTuning) {
+                handleDroneModeChange(currentDroneMode); 
+            }
+        });
+
+        pitchUpButton.addEventListener('click', () => changePitch('up'));
+        pitchDownButton.addEventListener('click', () => changePitch('down'));
+        
+        volumeSlider.addEventListener('input', (e) => {
+            setVolume(parseFloat(e.target.value));
+        });
+
+        droneModeButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                handleDroneModeChange(e.target.dataset.mode);
+            });
+        });
+
+
+        function startTuningAndDrone() {
+            audioContext = audioContext || (audioContext = new (window.AudioContext || window.webkitAudioContext)());
+            const initialTonicFreq = parseFloat(saSelect.value);
+            
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+
+            startDrone(initialTonicFreq);
+
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaStreamSource = audioContext.createMediaStreamSource(stream);
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = BUF_SIZE * 2;
+                    mediaStreamSource.connect(analyser);
+                    
+                    isTuning = true;
+                    startButton.classList.add('playing');
+                    handleDroneModeChange(currentDroneMode); 
+                    
+                    rafID = window.requestAnimationFrame(updatePitch);
+                })
+                .catch(err => {
+                    console.error('Microphone access error:', err);
+                    statusMessage.textContent = `Error: Cannot access microphone. (${err.name}). Drone is STOPPED.`;
+                    startButton.classList.remove('playing');
+                    isTuning = false;
+                    stopDrone(); 
+                });
+        }
+
+        function stopTuningAndDrone() {
+            isTuning = false;
+            window.cancelAnimationFrame(rafID);
+
+            if (mediaStreamSource) {
+                const tracks = mediaStreamSource.mediaStream.getTracks();
+                tracks.forEach(track => track.stop());
+                mediaStreamSource.disconnect();
+            }
+            
+            stopDrone();
+
+            startButton.classList.remove('playing');
+            statusMessage.textContent = 'Drone & Tuning Stopped.';
+            
+            detectedFreqValue.textContent = '-- Hz';
+            centsValue.textContent = '-- CENTS';
+            centsValue.style.color = '#555';
+            needle.style.left = '50%';
+            needle.style.backgroundColor = '#8b0000';
+            
+            const currentTonic = parseFloat(saSelect.value);
+            closestSwara.textContent = 'Tuner Off'; 
+            closestSwara.style.color = '#007bff';
+            targetFreqDisplay.textContent = `Drone Sā: ${currentTonic.toFixed(2)} Hz`;
+        }
+
+        // Initial setup on load
+        const defaultTonicFreq = '293.66'; // D
+        saSelect.value = defaultTonicFreq;
+        targetFreqDisplay.textContent = `Closest Swara: Sā at ${parseFloat(defaultTonicFreq).toFixed(2)} Hz`;
+
+        currentDroneMode = 'Pa'; 
+        handleDroneModeChange(currentDroneMode); 
+        const paButton = document.getElementById('mode-pa');
+        if (paButton) paButton.classList.add('active');
+
+
+        function updatePitch() {
+            if (!isTuning || !analyser) return;
+
+            const buffer = new Float32Array(BUF_SIZE);
+            analyser.getFloatTimeDomainData(buffer);
+            let detectedFreq = autoCorrelate(buffer, audioContext.sampleRate);
+            const tonicFreq = parseFloat(saSelect.value);
+
+            detectedFreqValue.textContent = detectedFreq === -1 ? '-- Hz' : `${detectedFreq.toFixed(2)} Hz`;
+
+            if (detectedFreq !== -1) {
+                const match = findClosestSwara(detectedFreq, tonicFreq);
+                const { name, targetFreq, cents } = match;
+
+                // --- NEW PERCENTAGE CALCULATION ---
+                // Max deviation is CENTS_RANGE (50 cents). 0 cents is 100% match.
+                // Abs(cents) is max 50. (abs(cents)/50) is max 1.
+                const centsDeviationRatio = Math.abs(cents) / CENTS_RANGE;
+                let percentageMatch = Math.max(0, 100 - centsDeviationRatio * 100);
+                
+                // Update the main swara box with the percentage
+                closestSwara.textContent = `${percentageMatch.toFixed(1)} % Match`;
+                targetFreqDisplay.textContent = `Closest Swara: ${name} at ${targetFreq.toFixed(2)} Hz`;
+                
+                const displayedCents = Math.max(-CENTS_RANGE, Math.min(CENTS_RANGE, cents));
+                centsValue.textContent = `${displayedCents.toFixed(1)} CENTS`;
+
+                let gaugePosition = 50 + (cents / CENTS_RANGE) * 50; 
+                gaugePosition = Math.max(0, Math.min(100, gaugePosition));
+
+                needle.style.left = `${gaugePosition}%`;
+
+                if (Math.abs(cents) < 5) {
+                    needle.style.backgroundColor = 'green';
+                    centsValue.style.color = 'green';
+                    closestSwara.style.color = 'green';
+                } else {
+                    needle.style.backgroundColor = '#8b0000';
+                    centsValue.style.color = '#8b0000';
+                    closestSwara.style.color = '#007bff';
+                }
+            } else {
+                centsValue.textContent = '-- CENTS';
+                centsValue.style.color = '#555';
+                needle.style.left = '50%';
+                needle.style.backgroundColor = '#8b0000';
+                
+                closestSwara.textContent = '...Listening...'; 
+                // Display the currently selected Sā note and frequency
+                targetFreqDisplay.textContent = `Drone Sā: ${tonicFreq.toFixed(2)} Hz`; 
+            }
+
+            rafID = window.requestAnimationFrame(updatePitch);
+        }
+    </script>
+</body>
+</html>
